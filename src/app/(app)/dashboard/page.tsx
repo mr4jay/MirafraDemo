@@ -1,3 +1,7 @@
+
+"use client";
+
+import React from 'react'; // Added React for full import
 import { KpiCard } from '@/components/kpi-card';
 import { SensorChart } from '@/components/sensor-chart';
 import type { ChartConfig } from '@/components/ui/chart';
@@ -42,7 +46,7 @@ const energyChartConfig = {
 export default function DashboardPage() {
   // TODO: Fetch actual data from backend for KPIs and charts based on selected time range
   // TODO: Implement CSV export functionality (triggered by button, calls backend)
-  // const [timeRange, setTimeRange] = React.useState("24h"); // Example state for time range
+  const [timeRange, setTimeRange] = React.useState("24h"); // Example state for time range
 
   const handleExportCSV = () => {
     alert("CSV Export for dashboard data to be implemented.");
@@ -55,7 +59,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-foreground">HVAC Performance Dashboard</h1>
         <div className="flex items-center gap-2">
           {/* TODO: Implement Time Range Selector functionality */}
-          {/* <Label htmlFor="timeRangeDashboard" className="text-sm">Time Range:</Label>
+          <Label htmlFor="timeRangeDashboard" className="text-sm">Time Range:</Label>
           <Select defaultValue="24h" onValueChange={setTimeRange} name="timeRangeDashboard">
             <SelectTrigger className="w-[180px] h-9">
               <SelectValue placeholder="Select range" />
@@ -65,7 +69,7 @@ export default function DashboardPage() {
               <SelectItem value="7d">Last 7 Days</SelectItem>
               <SelectItem value="30d">Last 30 Days</SelectItem>
             </SelectContent>
-          </Select> */}
+          </Select>
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
@@ -160,3 +164,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

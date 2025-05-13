@@ -3,7 +3,7 @@ import type { ReactNode, ElementType } from 'react';
 export type NavItem = {
   title: string;
   href: string;
-  icon: ElementType; // Was LucideIcon, changed to support Material Icons
+  icon: string; // Changed from ElementType to string
   label?: string;
   disabled?: boolean;
   external?: boolean;
@@ -24,8 +24,9 @@ export type KpiCardProps = {
   title: string;
   value: string;
   unit?: string;
-  icon: ElementType; // Was LucideIcon, changed to support Material Icons
+  icon: ElementType; 
   description?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
 };
+
