@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    serverActions: {
+      allowedOrigins: [], // Add specific origins if needed, otherwise leave empty for same-origin
+    },
+  },
 };
 
 export default nextConfig;
