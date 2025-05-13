@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -12,9 +13,15 @@ import { OutputPanelPlaceholder } from "@/components/ide/output-panel-placeholde
 import { RefreshCw, UploadCloud, Play, BarChartBig, DatabaseZap, Workflow, CloudLightning, Cpu, BookOpen, Activity, Filter } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import PlotlyChart from '@/components/ide/plotly-chart';
+// import PlotlyChart from '@/components/ide/plotly-chart';
 import type { Data, Layout } from 'plotly.js-dist-min';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import dynamic from 'next/dynamic';
+
+const PlotlyChart = dynamic(() => import('@/components/ide/plotly-chart'), {
+  ssr: false,
+  loading: () => <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md"><p className="text-muted-foreground">Loading chart...</p></div>,
+});
 
 
 // Conceptual: Python script for S3 data preprocessing and analysis.
@@ -467,3 +474,4 @@ export default function DataExplorerPage() {
     </div>
   );
 }
+

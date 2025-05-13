@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -8,8 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Zap, DollarSign, Smile, AlertTriangle, ArrowRightLeft, Download } from 'lucide-react';
-import PlotlyChart from '@/components/ide/plotly-chart'; // Import PlotlyChart
+// import PlotlyChart from '@/components/ide/plotly-chart'; // Import PlotlyChart
 import type { Data, Layout } from 'plotly.js-dist-min';
+import dynamic from 'next/dynamic';
+
+const PlotlyChart = dynamic(() => import('@/components/ide/plotly-chart'), {
+  ssr: false,
+  loading: () => <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md"><p className="text-muted-foreground">Loading chart...</p></div>,
+});
 
 
 // Mock data generation
@@ -207,3 +214,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

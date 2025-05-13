@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -7,8 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
 import type { TimeseriesData } from '@/types';
 import { Thermometer, Users, Zap, Download } from 'lucide-react';
-import PlotlyChart from '@/components/ide/plotly-chart'; // Import PlotlyChart
+// import PlotlyChart from '@/components/ide/plotly-chart'; 
 import type { Data, Layout } from 'plotly.js-dist-min';
+import dynamic from 'next/dynamic';
+
+const PlotlyChart = dynamic(() => import('@/components/ide/plotly-chart'), {
+  ssr: false,
+  loading: () => <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md"><p className="text-muted-foreground">Loading chart...</p></div>,
+});
+
 
 // Placeholder GaugeWidget component
 const GaugeWidget = ({ value, unit, title, min, max }: { value: number, unit: string, title: string, min: number, max: number }) => {
@@ -219,3 +227,4 @@ export default function SensorDataPage() {
     </div>
   );
 }
+
