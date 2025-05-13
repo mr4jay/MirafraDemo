@@ -1,11 +1,7 @@
 import type {Metadata} from 'next';
-import { GeistSans } from 'geist/font/sans';
-import { GeistMono } from 'geist/font/mono';
+// Geist Sans and Mono removed, Roboto will be imported via globals.css
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
-
-const geistSans = GeistSans;
-const geistMono = GeistMono;
 
 export const metadata: Metadata = {
   title: 'HVAC Optimizer',
@@ -19,7 +15,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/* Removed Geist font classes from body */}
+      <body className="antialiased">
         {children}
         <Toaster />
       </body>

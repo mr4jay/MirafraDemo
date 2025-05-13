@@ -1,9 +1,9 @@
-import type { LucideIcon } from 'lucide-react';
+import type { ReactNode, ElementType } from 'react';
 
 export type NavItem = {
   title: string;
   href: string;
-  icon: LucideIcon;
+  icon: ElementType; // Was LucideIcon, changed to support Material Icons
   label?: string;
   disabled?: boolean;
   external?: boolean;
@@ -24,7 +24,7 @@ export type KpiCardProps = {
   title: string;
   value: string;
   unit?: string;
-  icon: LucideIcon;
+  icon: ElementType; // Was LucideIcon, changed to support Material Icons
   description?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;

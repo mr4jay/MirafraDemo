@@ -12,7 +12,8 @@ import { AppLogo } from '@/components/app-logo';
 import { NavMenu } from '@/components/nav-menu';
 import { navItems } from '@/config/site';
 import { Button } from '@/components/ui/button';
-import { LogOut, UserCircle } from 'lucide-react';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -29,11 +30,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </SidebarContent>
         <SidebarFooter className="p-4 mt-auto border-t">
            <Button variant="ghost" className="w-full justify-start group-data-[collapsible=icon]:justify-center">
-             <UserCircle className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
+             <AccountCircleIcon className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
              <span className="group-data-[collapsible=icon]:hidden">Profile</span>
            </Button>
            <Button variant="ghost" className="w-full justify-start group-data-[collapsible=icon]:justify-center text-destructive hover:text-destructive hover:bg-destructive/10">
-             <LogOut className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
+             <LogoutIcon className="h-5 w-5 mr-2 group-data-[collapsible=icon]:mr-0" />
              <span className="group-data-[collapsible=icon]:hidden">Log Out</span>
            </Button>
         </SidebarFooter>
