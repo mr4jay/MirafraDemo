@@ -40,47 +40,40 @@ Custom hooks help to:
         *   The `useToast` hook allows components to access the current list of toasts and a `dismiss` function.
         *   The `toast` function is a utility to programmatically add new toasts. It accepts properties like `title`, `description`, `variant` (e.g., "default", "destructive"), and an optional `action` element.
         *   Manages a `TOAST_LIMIT` (e.g., only show one toast at a time) and a `TOAST_REMOVE_DELAY`.
+    *   **Relevance for Data Analytics Engineers (IDE Context)**:
+        *   The IDE can use `toast` notifications to provide feedback on asynchronous operations like:
+            *   Completion or failure of a Python script execution (e.g., "Preprocessing script completed successfully.", "Algorithm simulation failed: Check logs.").
+            *   Status of data source connections (e.g., "Connected to S3 bucket: hvac-data-raw").
+            *   Deployment status updates (e.g., "Algorithm deployment to Lambda started.", "SageMaker endpoint update successful.").
+            *   Git actions (e.g., "Changes committed successfully.").
     *   **Usage**:
         *   **Displaying Toasts (in a component):**
             ```typescript
             import { useToast } from '@/hooks/use-toast';
             import { Button } from '@/components/ui/button';
+            // import { ToastAction } from "@/components/ui/toast"; // If using actions
 
-            function MyComponent() {
+            function MyIDEComponent() {
               const { toast } = useToast();
 
-              return (
-                <Button
-                  onClick={() => {
-                    toast({
-                      title: "Scheduled: Catch up",
-                      description: "Friday, February 10, 2023 at 5:57 PM",
-                      action: <ToastAction altText="Goto schedule to undo">Undo</ToastAction>,
-                    });
-                  }}
-                >
-                  Show Toast
-                </Button>
-              );
+              const handleRunScript = async () => {
+                // Simulate script execution
+                toast({ title: "Script Execution", description: "Python script is now running..." });
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
+                const success = Math.random() > 0.5;
+                if (success) {
+                  toast({ title: "Success", description: "Script executed successfully.", variant: "default" });
+                } else {
+                  toast({ title: "Error", description: "Script execution failed. See logs.", variant: "destructive" });
+                }
+              };
+
+              return <Button onClick={handleRunScript}>Run Python Script</Button>;
             }
             ```
         *   **Rendering Toasts (typically in the root layout):**
-            The `Toaster` component (`src/components/ui/toaster.tsx`) uses `useToast` to render the active toasts.
-            ```typescript
-            // In src/app/layout.tsx
-            import { Toaster } from "@/components/ui/toaster";
+            The `Toaster` component (`src/components/ui/toaster.tsx`) uses `useToast` to render the active toasts. This is already set up in `src/app/layout.tsx`.
 
-            export default function RootLayout({ children }) {
-              return (
-                <html>
-                  <body>
-                    {children}
-                    <Toaster />
-                  </body>
-                </html>
-              );
-            }
-            ```
     *   **Key Components**: Relies on `ToastProvider`, `ToastViewport`, `Toast`, etc., from `src/components/ui/toast.tsx`.
 
 ## Creating New Hooks

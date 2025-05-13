@@ -19,16 +19,16 @@ The component strategy relies heavily on:
     *   **Customization**: While these are library components, their styling is controlled via Tailwind CSS and CSS variables defined in `src/app/globals.css`, allowing for theming.
 
 *   **`src/components` (root of this directory)**:
-    *   **Purpose**: Contains custom, application-specific components that are not part of the generic ShadCN UI library. These components are often composed of elements from `src/components/ui`.
+    *   **Purpose**: Contains custom, application-specific components. For Data Analytics Engineers, relevant custom components include those that form the building blocks of the Cloud IDE, enabling them to interact with data, develop algorithms, and monitor performance.
     *   **Examples**:
         *   `app-logo.tsx`: The main application logo.
         *   `ide-logo.tsx`: The logo for the IDE section.
-        *   `kpi-card.tsx`: A specialized card component for displaying Key Performance Indicators.
-        *   `nav-menu.tsx`: Renders the navigation menu within the sidebars.
-        *   `ide/code-editor-placeholder.tsx`: A placeholder component simulating a code editor within the IDE.
-        *   `ide/file-browser-placeholder.tsx`: A placeholder for browsing files/data sources in the IDE.
-        *   `ide/output-panel-placeholder.tsx`: A placeholder for displaying command outputs or logs in the IDE.
-        *   `ide/plotly-chart.tsx`: A wrapper component for integrating Plotly.js charts.
+        *   `kpi-card.tsx`: A specialized card component for displaying Key Performance Indicators, useful in both the main app and the IDE's monitoring dashboard.
+        *   `nav-menu.tsx`: Renders the navigation menu within the sidebars for both the app and IDE.
+        *   `ide/code-editor-placeholder.tsx`: A placeholder component simulating a code editor within the IDE. Data Analytics Engineers use this for Python scripting.
+        *   `ide/file-browser-placeholder.tsx`: A placeholder for browsing files/data sources (S3, DynamoDB) in the IDE.
+        *   `ide/output-panel-placeholder.tsx`: A placeholder for displaying command outputs, logs, or algorithm results in the IDE.
+        *   `ide/plotly-chart.tsx`: A wrapper component for integrating Plotly.js charts, crucial for timeseries data visualization by engineers.
 
 ## Component Design Principles
 
@@ -45,7 +45,7 @@ The component strategy relies heavily on:
 *   **Single Root Element**: Each React component should return a single root JSX element. Fragments (`<>...</>`) can be used if no wrapper `div` is needed.
 *   **Client vs. Server Components**:
     *   Default to Server Components for better performance.
-    *   Use the `'use client';` directive only when client-side interactivity (hooks like `useState`, `useEffect`, event handlers) is necessary.
+    *   Use the `'use client';` directive only when client-side interactivity (hooks like `useState`, `useEffect`, event handlers) is necessary. Many IDE components will be client components due to their interactive nature.
 
 ## Using Components
 
@@ -54,12 +54,15 @@ Import components as needed:
 // Example from a page component
 import { Button } from '@/components/ui/button';
 import { KpiCard } from '@/components/kpi-card';
+// Example for IDE:
+// import { CodeEditorPlaceholder } from '@/components/ide/code-editor-placeholder';
 
 export default function MyPage() {
   return (
     <div>
       <KpiCard title="Energy Saved" value="150 kWh" icon={Zap} />
       <Button onClick={() => alert('Clicked!')}>Click Me</Button>
+      {/* <CodeEditorPlaceholder title="My Python Script" language="python" /> */}
     </div>
   );
 }
@@ -71,7 +74,7 @@ export default function MyPage() {
     *   Run `npx shadcn-ui@latest add <component-name>`.
     *   The component will be added to `src/components/ui`.
 2.  **Custom Component**:
-    *   Create a new `.tsx` file in `src/components` (or a relevant subdirectory).
+    *   Create a new `.tsx` file in `src/components` (or a relevant subdirectory like `src/components/ide`).
     *   Develop the component, adhering to the design principles.
     *   Export the component for use elsewhere.
 ```

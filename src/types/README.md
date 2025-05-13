@@ -9,6 +9,11 @@ Centralizing type definitions helps in:
 -   Improving code readability and maintainability.
 -   Leveraging TypeScript's static typing benefits for early error detection and better developer experience (e.g., autocompletion).
 
+For Data Analytics Engineers, well-defined types are particularly important for:
+-   **Data Integrity**: Ensuring data flowing through preprocessing pipelines and into algorithms adheres to expected formats.
+-   **Algorithm Inputs/Outputs**: Clearly defining the expected structure of data passed to and returned by Python algorithms when interfacing with the TypeScript-based frontend or backend services.
+-   **API Contracts**: When interacting with backend APIs (e.g., for fetching data or triggering algorithm runs), types help define the expected request and response payloads.
+
 ## Key Type Definitions (`index.ts`)
 
 *   **`NavItem`**:
@@ -27,7 +32,7 @@ Centralizing type definitions helps in:
     *   **Properties**:
         *   `time: string`: The timestamp of the reading, typically an ISO string or a formatted date string.
         *   `value: number`: The numerical value of the sensor reading.
-    *   **Usage**: Used within `TimeseriesData` to represent individual points in a sensor data series.
+    *   **Usage**: Used within `TimeseriesData` to represent individual points in a sensor data series. This structure is fundamental for timeseries analysis performed by Data Analytics Engineers.
 
 *   **`TimeseriesData`**:
     *   **Purpose**: Defines the structure for a complete timeseries dataset for a particular sensor or metric.
@@ -35,7 +40,7 @@ Centralizing type definitions helps in:
         *   `name: string`: The name or identifier of the sensor or metric (e.g., "temperature_zone_a", "energy_consumption").
         *   `data: SensorDataPoint[]`: An array of `SensorDataPoint` objects representing the actual timeseries values.
         *   `color?: string`: Optional property to specify a color for this series when displayed in charts (e.g., Plotly.js).
-    *   **Usage**: Used for passing sensor data to charting components and for data manipulation in preprocessing scripts.
+    *   **Usage**: Used for passing sensor data to charting components (like Plotly.js in the Data Explorer) and for data manipulation in Python preprocessing scripts (where this structure might be mirrored or converted from/to pandas DataFrames).
 
 *   **`KpiCardProps`**:
     *   **Purpose**: Defines the properties for the `KpiCard` component (`src/components/kpi-card.tsx`).
@@ -47,7 +52,7 @@ Centralizing type definitions helps in:
         *   `description?: string`: Optional descriptive text below the main value.
         *   `trend?: 'up' | 'down' | 'neutral'`: Optional indicator of the trend direction.
         *   `trendValue?: string`: Optional string representing the magnitude of the trend (e.g., "5%", "2 pts").
-    *   **Usage**: Used by the `KpiCard` component to render performance indicators on dashboards.
+    *   **Usage**: Used by the `KpiCard` component to render performance indicators on dashboards, helping engineers monitor the impact of their algorithms.
 
 *   **`ChatMessage`**:
     *   **Purpose**: Defines the structure for a message within the IDE's chat feature.
@@ -57,14 +62,14 @@ Centralizing type definitions helps in:
         *   `text: string`: The content of the chat message.
         *   `time: string`: The timestamp of when the message was sent (ISO string or formatted time).
         *   `isLocalUser?: boolean`: Optional flag to differentiate messages sent by the current user, primarily for UI styling.
-    *   **Usage**: Used in `src/app/ide/(ide-app)/monitoring/page.tsx` to manage and display chat messages.
+    *   **Usage**: Used in `src/app/ide/(ide-app)/monitoring/page.tsx` to manage and display chat messages, supporting collaboration among engineers.
 
 ## Adding New Types
 
-When introducing new shared data structures:
+When introducing new shared data structures relevant to data pipelines or algorithm interfaces:
 1.  Define the interface or type alias in `src/types/index.ts`.
 2.  Use clear and descriptive names for types and their properties.
-3.  Provide JSDoc comments if the type or its properties are not self-explanatory.
+3.  Provide JSDoc comments if the type or its properties are not self-explanatory, especially if they map to Python data structures.
 4.  Import types where needed using:
     ```typescript
     import type { MyNewType } from '@/types';
