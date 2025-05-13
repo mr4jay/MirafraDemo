@@ -1,3 +1,6 @@
+
+'use client'; 
+
 import type { ReactNode } from 'react';
 import {
   SidebarProvider,
@@ -7,18 +10,25 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar, 
 } from '@/components/ui/sidebar';
+import { SheetTitle } from '@/components/ui/sheet'; 
 import { AppLogo } from '@/components/app-logo';
 import { NavMenu } from '@/components/nav-menu';
 import { navItems } from '@/config/site';
 import { Button } from '@/components/ui/button';
 import { UserCircle2, LogOut } from 'lucide-react';
 
-export default function AppLayout({ children }: { children: ReactNode }) {
+function AppLayoutContent({ children }: { children: ReactNode }) {
+  const { isMobile } = useSidebar();
+
   return (
-    <SidebarProvider defaultOpen={true}>
+    <>
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center justify-between">
+          {isMobile && ( 
+            <SheetTitle className="sr-only">Main Application Menu</SheetTitle>
+          )}
           <div className="group-data-[collapsible=icon]:hidden">
             <AppLogo />
           </div>
@@ -40,7 +50,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-4">
-          {/* Could add breadcrumbs or page title here */}
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
@@ -49,6 +58,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </SidebarInset>
+    </>
+  );
+}
+
+export default function AppLayout({ children }: { children: ReactNode }) {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }

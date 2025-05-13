@@ -1,4 +1,6 @@
 
+'use client'; 
+
 import type { ReactNode } from 'react';
 import {
   SidebarProvider,
@@ -8,18 +10,25 @@ import {
   SidebarFooter,
   SidebarTrigger,
   SidebarInset,
+  useSidebar, 
 } from '@/components/ui/sidebar';
+import { SheetTitle } from '@/components/ui/sheet'; 
 import { IDELogo } from '@/components/ide-logo';
 import { NavMenu } from '@/components/nav-menu';
 import { ideNavItems } from '@/config/ide';
 import { Button } from '@/components/ui/button';
-import { UserCircle2, Settings, LogOutIcon } from 'lucide-react'; // Using LogOutIcon as LogOut may not exist
+import { UserCircle2, Settings, LogOutIcon } from 'lucide-react'; 
 
-export default function IDEAppLayout({ children }: { children: ReactNode }) {
+function IDEAppLayoutContent({ children }: { children: ReactNode }) {
+  const { isMobile } = useSidebar(); 
+
   return (
-    <SidebarProvider defaultOpen={true}>
+    <>
       <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center justify-between">
+          {isMobile && ( 
+            <SheetTitle className="sr-only">IDE Navigation Menu</SheetTitle>
+          )}
           <div className="group-data-[collapsible=icon]:hidden">
             <IDELogo />
           </div>
@@ -48,12 +57,19 @@ export default function IDEAppLayout({ children }: { children: ReactNode }) {
           <div className="md:hidden">
             <SidebarTrigger />
           </div>
-          {/* Breadcrumbs or current tool title could go here */}
         </header>
         <main className="flex-1 p-4 md:p-6 overflow-auto">
           {children}
         </main>
       </SidebarInset>
+    </>
+  );
+}
+
+export default function IDEAppLayout({ children }: { children: ReactNode }) {
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <IDEAppLayoutContent>{children}</IDEAppLayoutContent>
     </SidebarProvider>
   );
 }
