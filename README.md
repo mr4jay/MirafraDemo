@@ -1,4 +1,4 @@
-[Link Text](https://9000-firebase-studio-1747128976205.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev/)
+[Hosted App](https://9000-firebase-studio-1747128976205.cluster-htdgsbmflbdmov5xrjithceibm.cloudworkstations.dev/)
 
 # HVAC Optimizer & Cloud IDE
 
