@@ -30,3 +30,10 @@ export type KpiCardProps = {
   trendValue?: string;
 };
 
+export interface ChatMessage {
+  id: string;
+  user: string;
+  text: string;
+  time: string; // ISO string or formatted time
+  isLocalUser?: boolean; // Optional: to differentiate messages from the current user
+}

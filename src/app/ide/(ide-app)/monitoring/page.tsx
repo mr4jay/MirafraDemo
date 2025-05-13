@@ -1,11 +1,12 @@
+
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Activity, DatabaseZap, BrainCircuit, Pipeline, ServerCrash, BellRing, RefreshCcw, MessageSquare, GitFork, Users, AlertTriangle, Cpu, MemoryStick, BarChart, LineChartIcon } from "lucide-react"; 
+import { Activity, DatabaseZap, BrainCircuit, Pipeline, ServerCrash, BellRing, RefreshCcw, MessageSquare, GitFork, Users, AlertTriangle, Cpu, MemoryStick, BarChart, LineChartIcon, Wifi, WifiOff } from "lucide-react"; 
 import Image from "next/image";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import dynamic from 'next/dynamic';
 import type { Data, Layout } from 'plotly.js-dist-min';
+import { cn } from "@/lib/utils";
+import type { ChatMessage } from '@/types'; // Import ChatMessage type
+import { useToast } from "@/hooks/use-toast";
+
 
 const PlotlyChart = dynamic(() => import('@/components/ide/plotly-chart'), {
   ssr: false,
@@ -66,13 +71,23 @@ const commonLayoutOptions: Partial<Layout> = {
   legend: { bgcolor: 'hsla(var(--card), 0.5)', bordercolor: 'hsl(var(--border))' }
 };
 
+// Placeholder WebSocket URL - replace with your actual API Gateway WebSocket URL
+const CHAT_WEBSOCKET_URL = process.env.NEXT_PUBLIC_CHAT_WEBSOCKET_URL || 'wss://your-chat-api-gateway-endpoint.example.com/production';
+
+
 export default function MonitoringPage() {
   const [timeRange, setTimeRange] = useState("last_1_hour");
   const [timePoints, setTimePoints] = useState<string[]>([]);
   const [lambdaMetricsData, setLambdaMetricsData] = useState<Data[]>([]);
   const [athenaQueryLog, setAthenaQueryLog] = useState<string[]>([]);
-  const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
+  
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [isChatConnected, setIsChatConnected] = useState(false);
+  const ws = useRef<WebSocket | null>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+
 
   useEffect(() => {
     const now = Date.now();
@@ -95,9 +110,69 @@ export default function MonitoringPage() {
       ]);
     }
   }, [timePoints]);
+
+  // WebSocket connection for chat
+  useEffect(() => {
+    if (!CHAT_WEBSOCKET_URL.includes('your-chat-api-gateway-endpoint.example.com')) {
+      ws.current = new WebSocket(CHAT_WEBSOCKET_URL);
+
+      ws.current.onopen = () => {
+        console.log('Chat WebSocket connected');
+        setIsChatConnected(true);
+        toast({ title: "Chat Connected", description: "Successfully connected to the real-time chat server.", variant: "default" });
+        // Example: send a join message or authentication token if required by backend
+        // ws.current?.send(JSON.stringify({ action: 'join', user: 'Engineer-IDE' }));
+      };
+
+      ws.current.onmessage = (event) => {
+        try {
+          const messageData = JSON.parse(event.data as string);
+          // Assuming the server sends messages in ChatMessage format or similar
+          // You might need to adapt this based on your backend's message structure
+          if (messageData.user && messageData.text && messageData.time) {
+             setChatMessages(prev => [...prev, { ...messageData, id: messageData.id || Date.now().toString() + Math.random().toString() }]);
+          } else {
+            console.warn("Received malformed message from WebSocket:", messageData);
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+           setChatMessages(prev => [...prev, { id: Date.now().toString(), user: 'System', text: event.data as string, time: new Date().toLocaleTimeString(), isLocalUser: false }]);
+        }
+      };
+
+      ws.current.onclose = () => {
+        console.log('Chat WebSocket disconnected');
+        setIsChatConnected(false);
+        toast({ title: "Chat Disconnected", description: "Connection to the chat server was closed.", variant: "destructive" });
+      };
+
+      ws.current.onerror = (error) => {
+        console.error('Chat WebSocket error:', error);
+        setIsChatConnected(false);
+        toast({ title: "Chat Connection Error", description: "Could not connect to the chat server. Please check the console.", variant: "destructive" });
+      };
+
+      return () => {
+        ws.current?.close();
+      };
+    } else {
+        console.warn("Chat WebSocket URL is a placeholder. Real-time chat will not function.");
+        toast({ title: "Chat Offline", description: "Chat server URL is not configured. Real-time chat disabled.", variant: "default"});
+    }
+  }, [toast]);
   
+  // Auto-scroll chat messages
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [chatMessages]);
+
+
   const handleRefresh = () => {
-    // Simulate fetching new data
     const now = Date.now();
     let points: string[] = [];
     const interval = timeRange === 'last_15_min' ? 1 : timeRange === 'last_1_hour' ? 5 : 30;
@@ -105,34 +180,34 @@ export default function MonitoringPage() {
     for (let i = numPoints -1; i >=0; i--) {
         points.push(new Date(now - i * interval * 60000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit'}));
     }
-    setTimePoints(points); // This will trigger the useEffect for lambdaMetricsData
+    setTimePoints(points);
     setAthenaQueryLog(prev => [...prev, `Refreshed Athena Query log at ${new Date().toLocaleTimeString()}`]);
-    // TODO: Add logic to actually refetch data for other components as well
+    toast({ title: "Dashboard Refreshed", description: "Monitoring data has been updated.", variant: "default"});
   };
 
   const handleSendChatMessage = () => {
-    if (chatInput.trim()) {
-      setChatMessages(prev => [...prev, { user: 'Engineer-IDE', text: chatInput, time: new Date().toLocaleTimeString() }]);
+    if (chatInput.trim() && ws.current?.readyState === WebSocket.OPEN) {
+      const message: ChatMessage = {
+        id: Date.now().toString() + Math.random().toString(), // Temporary client-side ID
+        user: 'Engineer-IDE', // Replace with actual username
+        text: chatInput,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isLocalUser: true,
+      };
+      // Backend should ideally assign final ID and broadcast.
+      // For now, add to local state immediately for responsiveness.
+      setChatMessages(prev => [...prev, message]);
+      
+      // Send to WebSocket server
+      // The server should then broadcast this message to other connected clients.
+      // The server might also echo the message back to this client, in which case
+      // you'd need logic to avoid duplicating messages (e.g., by checking message IDs).
+      ws.current.send(JSON.stringify({ action: 'sendMessage', data: { user: message.user, text: message.text } })); // Example action format
       setChatInput('');
-      // Conceptual: Send message via WebSocket to AWS API Gateway
-      // ws.send(JSON.stringify({ action: 'sendMessage', data: { user: 'Engineer-IDE', text: chatInput } }));
+    } else if (!isChatConnected) {
+        toast({ title: "Chat Offline", description: "Cannot send message. Not connected to chat server.", variant: "destructive" });
     }
   };
-
-  // Conceptual: WebSocket connection for chat
-  // useEffect(() => {
-  //   const ws = new WebSocket('wss://your-api-gateway-websocket-url/chat');
-  //   ws.onopen = () => console.log('Chat WebSocket connected');
-  //   ws.onmessage = (event) => {
-  //     const message = JSON.parse(event.data as string);
-  //     if (message.type === 'newMessage') {
-  //       setChatMessages(prev => [...prev, message.data]);
-  //     }
-  //   };
-  //   ws.onclose = () => console.log('Chat WebSocket disconnected');
-  //   return () => ws.close();
-  // }, []);
-
 
   const lambdaChartLayout: Partial<Layout> = { ...commonLayoutOptions, title: { text: 'Lambda Performance Over Time', font: { size: 14}} };
   const athenaChartLayout: Partial<Layout> = { ...commonLayoutOptions, title: { text: 'Athena Query Performance (Simulated)', font: { size: 14}}, yaxis: { ...commonLayoutOptions.yaxis, title: { text: 'Runtime (s) / Data Scanned (MB)'}} };
@@ -277,8 +352,8 @@ export default function MonitoringPage() {
                                 <TableCell className="text-xs">{alert.time}</TableCell>
                                 <TableCell className="text-right text-xs">
                                     <Badge variant={alert.status === 'Active' ? (alert.severity.startsWith("P1") ? "destructive" : "default") : "outline"} 
-                                           className={cn(alert.status === 'Active' && !alert.severity.startsWith("P1") && 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30',
-                                                        alert.status === 'Resolved' && 'bg-green-500/20 text-green-700 border-green-500/30')}>
+                                           className={cn(alert.status === 'Active' && !alert.severity.startsWith("P1") && 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20',
+                                                        alert.status === 'Resolved' && 'bg-green-500/20 text-green-700 border-green-500/30 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20')}>
                                         {alert.status}
                                     </Badge>
                                 </TableCell>
@@ -297,19 +372,36 @@ export default function MonitoringPage() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
-            <h3 className="font-semibold flex items-center"><MessageSquare className="mr-2 h-4 w-4 text-indigo-500"/>Team Chat (Conceptual)</h3>
-            <p className="text-xs text-muted-foreground">Real-time chat via AWS API Gateway WebSockets, Lambda for message handling, and DynamoDB for message storage.</p>
-            <ScrollArea className="h-[200px] border rounded-md p-3 bg-muted/30 text-xs space-y-2">
-              {chatMessages.map((msg, i) => (
-                <div key={i} className="p-1.5 rounded-md bg-background shadow-sm">
-                  <span className="font-semibold text-indigo-600">{msg.user}</span> <span className="text-gray-500 text-[10px]">({msg.time}):</span> {msg.text}
+            <h3 className="font-semibold flex items-center">
+                <MessageSquare className="mr-2 h-4 w-4 text-indigo-500"/>Team Chat
+                {isChatConnected ? <Wifi className="ml-2 h-4 w-4 text-green-500" /> : <WifiOff className="ml-2 h-4 w-4 text-red-500" />}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+                Real-time chat (client-side implementation). Backend requires AWS API Gateway WebSockets, Lambda, and DynamoDB.
+                Current Status: {isChatConnected ? <span className="text-green-600 font-semibold">Connected</span> : <span className="text-red-600 font-semibold">Disconnected</span>}
+            </p>
+            <ScrollArea className="h-[200px] border rounded-md p-3 bg-muted/30 text-xs space-y-2" ref={scrollAreaRef}>
+              {chatMessages.map((msg) => (
+                <div key={msg.id} className={cn("p-1.5 rounded-md shadow-sm flex flex-col", msg.isLocalUser ? "bg-primary/10 items-end ml-auto" : "bg-background items-start mr-auto")} style={{maxWidth: '80%'}}>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className={cn("font-semibold", msg.isLocalUser ? "text-primary" : "text-indigo-600")}>{msg.user}</span> 
+                    <span className="text-gray-500 text-[10px]">({msg.time})</span>
+                  </div>
+                  <p className="text-foreground break-words">{msg.text}</p>
                 </div>
               ))}
               {chatMessages.length === 0 && <p className="text-center text-muted-foreground py-8">No messages yet. Start a conversation!</p>}
             </ScrollArea>
             <div className="flex gap-2">
-              <Textarea placeholder="Type your message... (Conceptual: WebSocket integration)" value={chatInput} onChange={(e) => setChatInput(e.target.value)} className="h-20 text-xs flex-grow resize-none"/>
-              <Button size="sm" className="text-xs h-auto self-end" onClick={handleSendChatMessage}>Send</Button>
+              <Textarea 
+                placeholder={isChatConnected ? "Type your message..." : "Chat disconnected..."}
+                value={chatInput} 
+                onChange={(e) => setChatInput(e.target.value)} 
+                className="h-20 text-xs flex-grow resize-none"
+                disabled={!isChatConnected}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendChatMessage();}}}
+              />
+              <Button size="sm" className="text-xs h-auto self-end" onClick={handleSendChatMessage} disabled={!isChatConnected || !chatInput.trim()}>Send</Button>
             </div>
           </div>
           <div className="space-y-3">
@@ -353,3 +445,4 @@ git push origin feature/optim-cost-weight-tuning
     </div>
   );
 }
+
