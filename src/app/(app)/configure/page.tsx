@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { Sparkles } from 'lucide-react';
 
 const formSchema = z.object({
   algorithmType: z.enum(["heuristic", "optimization", "ai_ml"], {
@@ -167,7 +167,7 @@ export default function ConfigurePage() {
                 {isLoading ? (
                   "Applying..."
                 ) : (
-                  <AutoAwesomeIcon className="mr-2 h-4 w-4" />
+                  <Sparkles className="mr-2 h-4 w-4" />
                 )}
                 Apply Configuration
               </Button>

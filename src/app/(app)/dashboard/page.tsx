@@ -6,13 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'; // For CSV export
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'; // For time range selector
 import { Label } from '@/components/ui/label'; // For time range selector
+import { Zap, DollarSign, Smile, AlertTriangle, ArrowRightLeft, Download } from 'lucide-react';
 
-import FlashOnIcon from '@mui/icons-material/FlashOn';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows'; // For Energy vs Baseline
-import DownloadIcon from '@mui/icons-material/Download'; // For CSV export
 
 // Mock data generation
 const generateMockTimeseries = (name: string, numPoints = 20, minVal = 10, maxVal = 30): TimeseriesData => {
@@ -72,7 +67,7 @@ export default function DashboardPage() {
             </SelectContent>
           </Select> */}
           <Button variant="outline" size="sm" onClick={handleExportCSV}>
-            <DownloadIcon className="mr-2 h-4 w-4" />
+            <Download className="mr-2 h-4 w-4" />
             Export CSV
           </Button>
         </div>
@@ -83,7 +78,7 @@ export default function DashboardPage() {
           title="Energy Consumption" 
           value="1,234" 
           unit="kWh" 
-          icon={FlashOnIcon} 
+          icon={Zap} 
           description="Current period" // Updated description
           trend="down"
           trendValue="5%"
@@ -92,7 +87,7 @@ export default function DashboardPage() {
           title="Energy vs Baseline" 
           value="-150" // Example: (Actual - Baseline)
           unit="kWh" 
-          icon={CompareArrowsIcon} 
+          icon={ArrowRightLeft} 
           description="Deviation from baseline"
           trend="down" // Negative is good (less than baseline)
           trendValue="10%"
@@ -100,7 +95,7 @@ export default function DashboardPage() {
         <KpiCard 
           title="Cost Savings" 
           value="$250.75" // Removed unit prop, included in value
-          icon={AttachMoneyIcon} 
+          icon={DollarSign} 
           description="Estimated this period" // Updated description
           trend="up"
           trendValue="12%"
@@ -109,7 +104,7 @@ export default function DashboardPage() {
           title="Comfort Score" 
           value="92" 
           unit="%" 
-          icon={SentimentSatisfiedAltIcon} 
+          icon={Smile} 
           description="Average across zones"
           trend="up"
           trendValue="2 pts"
@@ -117,7 +112,7 @@ export default function DashboardPage() {
          <KpiCard 
           title="Active Alerts" 
           value="3" 
-          icon={WarningAmberIcon} 
+          icon={AlertTriangle} 
           description="Require attention"
           trend="neutral" // Or based on change if applicable
           trendValue="Unchanged"

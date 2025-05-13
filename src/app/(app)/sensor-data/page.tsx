@@ -9,11 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
 import type { TimeseriesData } from '@/types'; // SensorDataPoint removed as it's part of TimeseriesData
+import { Thermometer, Users, Zap, Download } from 'lucide-react';
 
-import ThermostatIcon from '@mui/icons-material/Thermostat';
-import PeopleIcon from '@mui/icons-material/People';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
-import DownloadIcon from '@mui/icons-material/Download';
 
 // Placeholder GaugeWidget component
 const GaugeWidget = ({ value, unit, title, min, max }: { value: number, unit: string, title: string, min: number, max: number }) => {
@@ -52,9 +49,9 @@ const generateHistoricalTimeseries = (name: string, days = 7, pointsPerDay = 24,
 };
 
 const SENSOR_TYPES = [
-  { id: 'temperature', name: 'Temperature', unit: '°C', icon: ThermostatIcon, min: 15, max: 30, color: "hsl(var(--chart-1))" },
-  { id: 'occupancy', name: 'Occupancy', unit: '%', icon: PeopleIcon, min: 0, max: 100, color: "hsl(var(--chart-2))" },
-  { id: 'energy', name: 'Energy Usage', unit: 'kW', icon: FlashOnIcon, min: 0.1, max: 10, color: "hsl(var(--chart-3))" },
+  { id: 'temperature', name: 'Temperature', unit: '°C', icon: Thermometer, min: 15, max: 30, color: "hsl(var(--chart-1))" },
+  { id: 'occupancy', name: 'Occupancy', unit: '%', icon: Users, min: 0, max: 100, color: "hsl(var(--chart-2))" },
+  { id: 'energy', name: 'Energy Usage', unit: 'kW', icon: Zap, min: 0.1, max: 10, color: "hsl(var(--chart-3))" },
 ];
 
 export default function SensorDataPage() {
@@ -114,7 +111,7 @@ export default function SensorDataPage() {
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl font-bold text-foreground">Sensor Data Timeseries Analysis</h1>
         <Button variant="outline" size="sm" onClick={handleExportCSV}>
-          <DownloadIcon className="mr-2 h-4 w-4" />
+          <Download className="mr-2 h-4 w-4" />
           Export Data (CSV)
         </Button>
       </div>

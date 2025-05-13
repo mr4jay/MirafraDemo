@@ -1,8 +1,5 @@
 import type { NavItem } from '@/types';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import TuneIcon from '@mui/icons-material/Tune';
-import SettingsIcon from '@mui/icons-material/Settings';
+import { LayoutDashboard, BarChart3, SlidersHorizontal, Settings } from 'lucide-react';
 
 export const siteConfig = {
   name: "HVAC Optimizer",
@@ -13,25 +10,25 @@ export const navItems: NavItem[] = [
   {
     title: "Dashboard",
     href: "/dashboard",
-    icon: DashboardIcon,
+    icon: LayoutDashboard,
     label: "Dashboard",
   },
   {
     title: "Sensor Data",
     href: "/sensor-data",
-    icon: AssessmentIcon,
+    icon: BarChart3,
     label: "Sensor Data",
   },
   {
     title: "Algorithm Output",
     href: "/algorithm-output",
-    icon: TuneIcon,
+    icon: SlidersHorizontal,
     label: "Algorithm Output",
   },
   {
     title: "Configure System",
     href: "/configure",
-    icon: SettingsIcon,
+    icon: Settings,
     label: "Configure",
   },
 ];

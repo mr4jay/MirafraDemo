@@ -2,10 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import TuneIcon from '@mui/icons-material/Tune';
-import AirIcon from '@mui/icons-material/Air';
-import ThermostatIcon from '@mui/icons-material/Thermostat';
+import { Lightbulb, SlidersHorizontal, AirVent, Thermometer } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils"; // Assuming cn is in lib/utils
@@ -37,10 +34,10 @@ const mockActions: AlgorithmAction[] = [
 ];
 
 const getActionIcon = (action: string) => {
-  if (action.toLowerCase().includes('setpoint') || action.toLowerCase().includes('°c')) return <ThermostatIcon className="h-4 w-4 mr-2" />;
-  if (action.toLowerCase().includes('fan') || action.toLowerCase().includes('ventilation')) return <AirIcon className="h-4 w-4 mr-2" />;
-  if (action.toLowerCase().includes('mode') || action.toLowerCase().includes('deadband')) return <TuneIcon className="h-4 w-4 mr-2" />;
-  return <LightbulbOutlinedIcon className="h-4 w-4 mr-2" />;
+  if (action.toLowerCase().includes('setpoint') || action.toLowerCase().includes('°c')) return <Thermometer className="h-4 w-4 mr-2" />;
+  if (action.toLowerCase().includes('fan') || action.toLowerCase().includes('ventilation')) return <AirVent className="h-4 w-4 mr-2" />;
+  if (action.toLowerCase().includes('mode') || action.toLowerCase().includes('deadband')) return <SlidersHorizontal className="h-4 w-4 mr-2" />;
+  return <Lightbulb className="h-4 w-4 mr-2" />;
 }
 
 export default function AlgorithmOutputPage() {

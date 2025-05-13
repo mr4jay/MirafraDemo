@@ -1,13 +1,11 @@
 import type { ElementType } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // CardDescription removed as it's not used here
 import { cn } from '@/lib/utils';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import RemoveIcon from '@mui/icons-material/Remove';
+import { ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import type { KpiCardProps } from '@/types';
 
 export function KpiCard({ title, value, unit, icon: Icon, description, trend, trendValue }: KpiCardProps) {
-  const TrendIcon = trend === 'up' ? ArrowUpwardIcon : trend === 'down' ? ArrowDownwardIcon : RemoveIcon;
+  const TrendIcon = trend === 'up' ? ArrowUp : trend === 'down' ? ArrowDown : Minus;
   const trendColor = trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-muted-foreground';
 
   return (
