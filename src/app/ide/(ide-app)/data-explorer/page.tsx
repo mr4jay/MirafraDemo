@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -14,51 +15,113 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 
 const initialPythonScript = `
+import json
 import boto3
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+import numpy as np # Required for type conversions for DynamoDB
 
-# Example: Fetch data from S3
-# s3_client = boto3.client('s3')
-# obj = s3_client.get_object(Bucket='your-bucket', Key='your-file.json') # e.g., JSON, CSV, Parquet
-# df = pd.read_json(obj['Body']) 
+def lambda_handler(event, context):
+    s3_client = boto3.client('s3')
+    dynamodb = boto3.resource('dynamodb')
+    # Ensure 'SensorData' matches the DynamoDB table name specified in the architecture
+    table = dynamodb.Table('SensorData') 
 
-# Example: Fetch data from DynamoDB
-# dynamodb = boto3.resource('dynamodb')
-# table = dynamodb.Table('SensorData')
-# response = table.query(KeyConditionExpression=...)
-# df = pd.DataFrame(response['Items'])
-
-print("Sample Data Loaded (Mock).")
-
-def preprocess_data(df):
-    print("Starting data preprocessing...")
-    # Handle missing values (interpolate using linear method)
-    df['value_interpolated'] = df['value'].interpolate(method='linear')
+    # Assuming event is from S3 trigger for a single object
+    bucket_name = event['Records'][0]['s3']['bucket']['name']
+    object_key = event['Records'][0]['s3']['object']['key']
     
-    # Outlier removal (values >3σ)
-    mean = df['value_interpolated'].mean()
-    std_dev = df['value_interpolated'].std()
-    df_cleaned = df[df['value_interpolated'].between(mean - 3 * std_dev, mean + 3 * std_dev)]
-    
-    # Normalization (MinMaxScaler for 0–1 range)
-    scaler = MinMaxScaler()
-    df_cleaned['value_normalized'] = scaler.fit_transform(df_cleaned[['value_interpolated']])
-    
-    print("Preprocessing complete.")
-    print("Cleaned DataFrame head:")
-    print(df_cleaned.head())
-    return df_cleaned
+    print(f"Processing s3://{bucket_name}/{object_key}")
 
-# Assuming df is loaded
-# df_processed = preprocess_data(df.copy())
+    try:
+        s3_object = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+        # Assuming data is JSON. Add error handling for different formats or parsing errors.
+        # For Parquet, you might use pd.read_parquet(io.BytesIO(s3_object['Body'].read()))
+        # For CSV, pd.read_csv(io.BytesIO(s3_object['Body'].read()))
+        df = pd.read_json(s3_object['Body']) 
+        
+        # Basic validation: Ensure 'value' column exists
+        if 'value' not in df.columns:
+            print(f"Key 'value' not found in DataFrame from {object_key}")
+            return {'statusCode': 400, 'body': json.dumps(f"Missing 'value' column in {object_key}")}
 
-# Example: Save processed data to S3 or DynamoDB
-# s3_client.put_object(Bucket='processed-bucket', Key='processed_data.csv', Body=df_processed.to_csv())
-# for index, row in df_processed.iterrows():
-#     dynamodb_table.put_item(Item=row.to_dict())
+        # Preprocessing
+        df['value'] = pd.to_numeric(df['value'], errors='coerce') # Ensure numeric, coerce errors to NaN
+        df.dropna(subset=['value'], inplace=True) # Drop rows where 'value' became NaN
 
-print("Preprocessing script ready. Use 'Run Preprocessing (via Lambda)' button.")
+        if df.empty:
+            print(f"DataFrame is empty after coercing/dropping NaN values for {object_key}")
+            return {'statusCode': 200, 'body': json.dumps(f"No valid data to process in {object_key} after initial cleaning")}
+
+        # Interpolate missing values using linear method (if any NaNs remain or were introduced before coercion)
+        df['value_interpolated'] = df['value'].interpolate(method='linear')
+        
+        # Outlier removal (values >3σ from the mean of interpolated values)
+        # Check if std is not zero to avoid division by zero errors
+        if df['value_interpolated'].std() != 0:
+            mean_val = df['value_interpolated'].mean()
+            std_val = df['value_interpolated'].std()
+            df_cleaned = df[df['value_interpolated'].between(mean_val - 3 * std_val, mean_val + 3 * std_val)]
+        else:
+            df_cleaned = df.copy() # No outlier removal if std is zero
+        
+        # Drop duplicates - consider which columns define a duplicate
+        # Example: df_cleaned = df_cleaned.drop_duplicates(subset=['timestamp', 'sensor_id', 'value_interpolated'])
+        df_cleaned = df_cleaned.drop_duplicates() 
+
+        if df_cleaned.empty:
+            print(f"DataFrame is empty after outlier removal/deduplication for {object_key}")
+            return {'statusCode': 200, 'body': json.dumps(f"No data in {object_key} after outlier removal/deduplication")}
+
+        # Normalization (MinMaxScaler for 0–1 range on the cleaned, interpolated values)
+        scaler = MinMaxScaler()
+        df_cleaned['value_normalized'] = scaler.fit_transform(df_cleaned[['value_interpolated']])
+        
+        # Save processed data to DynamoDB (conceptual - requires correct schema mapping)
+        # Ensure all data types are compatible with DynamoDB (e.g., no np.float64)
+        # for _, row_series in df_cleaned.iterrows():
+        #     item_to_put = row_series.to_dict()
+        #     # Convert numpy types to Python native types
+        #     for k, v in item_to_put.items():
+        #         if isinstance(v, np.generic): # Catches numpy float, int, etc.
+        #             item_to_put[k] = v.item()
+        #         elif pd.isna(v): # Convert Pandas NaT/NaN to None for DynamoDB
+        #             item_to_put[k] = None
+        #     # Ensure primary key elements (sensor_id, timestamp) are present and correctly formatted
+        #     # Example: if 'sensor_id' in item_to_put and 'timestamp' in item_to_put:
+        #     #    table.put_item(Item=item_to_put)
+        #     # else:
+        #     #    print(f"Skipping row due to missing PK: {item_to_put}")
+        
+        print(f"Successfully preprocessed data from {object_key}. (Simulated save to DynamoDB)")
+        return {'statusCode': 200, 'body': json.dumps(f"Data from {object_key} preprocessed. (Simulated save to DynamoDB)")}
+
+    except Exception as e:
+        print(f"Error processing file {object_key}: {str(e)}")
+        # Depending on Lambda configuration, this might trigger retries or go to a DLQ.
+        # For a production system, consider more specific error handling and logging.
+        return {'statusCode': 500, 'body': json.dumps(f"Error processing {object_key}: {str(e)}")}
+
+# Example event structure (for local testing in IDE, not part of Lambda deployment)
+# mock_event = {
+#   "Records": [
+#     {
+#       "s3": {
+#         "bucket": {
+#           "name": "your-s3-bucket-name"
+#         },
+#         "object": {
+#           "key": "path/to/your/sample_data.json"
+#         }
+#       }
+#     }
+#   ]
+# }
+# if __name__ == "__main__":
+#    # This block allows local testing if you save the script and run it.
+#    # You would need to mock boto3 clients or have AWS credentials configured.
+#    # print(lambda_handler(mock_event, None))
+#    print("Script loaded. Define mock_event and AWS credentials/mocks for local testing.")
 `;
 
 const initialAthenaQuery = `
@@ -119,15 +182,15 @@ export default function DataExplorerPage() {
         <div className="lg:col-span-2 flex flex-col gap-4 min-h-0">
           <Card className="shadow-md flex-grow flex flex-col">
             <CardHeader className="py-3 px-4 border-b">
-              <CardTitle className="text-base flex items-center"><Workflow className="mr-2 h-5 w-5 text-primary"/>Data Preprocessing Pipeline</CardTitle>
+              <CardTitle className="text-base flex items-center"><Workflow className="mr-2 h-5 w-5 text-primary"/>Data Preprocessing Pipeline (AWS Lambda Script)</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4 flex-grow flex flex-col min-h-0">
                 <div className="flex-grow min-h-[200px]">
-                    <CodeEditorPlaceholder title="Python Preprocessing Script" defaultCode={initialPythonScript} language="python" />
+                    <CodeEditorPlaceholder title="Python Preprocessing Script (lambda_function.py)" defaultCode={initialPythonScript} language="python" />
                 </div>
                 <div className="flex gap-2 items-center">
-                    <Button variant="default"><Play className="mr-2 h-4 w-4" />Run Preprocessing (Lambda)</Button>
-                    <Button variant="outline"><BookOpen className="mr-2 h-4 w-4" />Load Sample Data (Mock)</Button>
+                    <Button variant="default"><Play className="mr-2 h-4 w-4" />Run Preprocessing (Simulate Lambda)</Button>
+                    <Button variant="outline"><BookOpen className="mr-2 h-4 w-4" />Load Sample S3 Event</Button>
                 </div>
                 <OutputPanelPlaceholder title="Preprocessing Output / Logs" />
             </CardContent>
@@ -187,3 +250,4 @@ export default function DataExplorerPage() {
     </div>
   );
 }
+
