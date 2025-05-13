@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import * as RechartsPrimitive from "recharts"
+import * as RechartsPrimitive from "recharts" // This will be unused after SensorChart removal but keep for now if other ui/chart parts depend on it conceptually.
 
 import { cn } from "@/lib/utils"
 
@@ -39,7 +39,7 @@ const ChartContainer = React.forwardRef<
   React.ComponentProps<"div"> & {
     config: ChartConfig
     children: React.ComponentProps<
-      typeof RechartsPrimitive.ResponsiveContainer
+      typeof RechartsPrimitive.ResponsiveContainer // Keep if ResponsiveContainer is used by PlotlyChart or other charts
     >["children"]
   }
 >(({ id, className, children, config, ...props }, ref) => {
@@ -53,12 +53,15 @@ const ChartContainer = React.forwardRef<
         ref={ref}
         className={cn(
           "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-none [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-sector]:outline-none [&_.recharts-surface]:outline-none",
+          // The above classes are Recharts specific. If PlotlyChart handles its own styling or uses different classes, this might need adjustment.
+          // For now, PlotlyChart uses its own inline styling and theme variables.
           className
         )}
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
-        <RechartsPrimitive.ResponsiveContainer>
+        {/* Assuming children might be a Plotly chart or other RechartsPrimitive.ResponsiveContainer wrapped content */}
+        <RechartsPrimitive.ResponsiveContainer> 
           {children}
         </RechartsPrimitive.ResponsiveContainer>
       </div>
@@ -100,7 +103,10 @@ ${colorConfig
   )
 }
 
-const ChartTooltip = RechartsPrimitive.Tooltip
+// ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent are Recharts specific.
+// They are not directly used by PlotlyChart. Keep them if other parts of ui/chart might use them.
+// If ui/chart is solely for Plotly now, these could be removed. For safety, keeping them.
+const ChartTooltip = RechartsPrimitive.Tooltip 
 
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,

@@ -5,13 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Lightbulb, SlidersHorizontal, AirVent, Thermometer } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils"; // Assuming cn is in lib/utils
-
-// TODO: Implement Vis.js component for Decision Flow
-// const DecisionFlowChart = ({ data }) => { /* ... Vis.js implementation ... */ return <div>Decision Flow Placeholder</div>; };
-
-// TODO: Implement Plotly.js component for Optimization Results
-// const OptimizationPlot = ({ data }) => { /* ... Plotly.js implementation ... */ return <div>Optimization Plot Placeholder</div>; };
+import { cn } from "@/lib/utils"; 
 
 interface AlgorithmAction {
   id: string;
@@ -104,7 +98,7 @@ export default function AlgorithmOutputPage() {
                   <TableCell className="text-right">
                     <Badge variant={item.status === 'Executed' ? 'default' : item.status === 'Pending' ? 'secondary' : 'destructive'}
                            className={cn(
-                             'text-xs caption', // ensure badge text uses caption size
+                             'text-xs caption', 
                              item.status === 'Executed' && 'bg-green-500/20 text-green-700 border-green-500/30 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20',
                              item.status === 'Pending' && 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20',
                              item.status === 'Failed' && 'bg-red-500/20 text-red-700 border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20'
@@ -125,8 +119,9 @@ export default function AlgorithmOutputPage() {
           <CardDescription>Visual representation of how heuristic rules are applied.</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* <DecisionFlowChart data={decisionFlowData} /> */}
-          <p className="text-muted-foreground">Decision Flow visualization (using Vis.js or similar) will be implemented here.</p>
+          <div className="h-[200px] flex items-center justify-center bg-muted/30 rounded-md" data-ai-hint="flowchart decision tree">
+            <p className="text-muted-foreground">Decision Flow visualization (using Vis.js or similar) will be implemented here.</p>
+          </div>
         </CardContent>
       </Card>
 
@@ -136,26 +131,24 @@ export default function AlgorithmOutputPage() {
           <CardDescription>Trade-offs and outcomes from optimization algorithms (e.g., cost vs. comfort plot).</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* <OptimizationPlot data={optimizationPlotData} /> */}
-          <p className="text-muted-foreground">Optimization results plot (using Plotly.js) will be implemented here.</p>
+           <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md" data-ai-hint="scatter plot cost comfort">
+            <p className="text-muted-foreground">Optimization results plot (using Plotly.js) will be implemented here.</p>
+           </div>
         </CardContent>
       </Card>
       
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="text-xl">ML Model Insights</CardTitle>
-          <CardDescription>Information about the AI/ML model's predictions and feature importance.</CardHeader>
+          <CardDescription>Information about the AI/ML model's predictions and feature importance.</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">ML insights (e.g., feature importance, prediction accuracy graphs/text) will be displayed here.</p>
+          <div className="h-[200px] flex items-center justify-center bg-muted/30 rounded-md" data-ai-hint="bar chart feature importance">
+            <p className="text-muted-foreground">ML insights (e.g., feature importance, prediction accuracy graphs/text) will be displayed here.</p>
+          </div>
         </CardContent>
       </Card>
 
     </div>
   );
 }
-
-// cn function should be imported from "@/lib/utils"
-// function cn(...inputs: Array<string | undefined | null | false>): string {
-//   return inputs.filter(Boolean).join(' ');
-// }

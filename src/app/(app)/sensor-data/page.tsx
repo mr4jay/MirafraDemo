@@ -1,20 +1,17 @@
-
 "use client";
 
-import React, { useState, useMemo, useEffect } from 'react'; // Added React for full import
-import { SensorChart } from '@/components/sensor-chart';
-import type { ChartConfig } from '@/components/ui/chart';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Label } from "@/components/ui/label";
-import type { TimeseriesData } from '@/types'; // SensorDataPoint removed as it's part of TimeseriesData
+import type { TimeseriesData } from '@/types';
 import { Thermometer, Users, Zap, Download } from 'lucide-react';
-
+import PlotlyChart from '@/components/ide/plotly-chart'; // Import PlotlyChart
+import type { Data, Layout } from 'plotly.js-dist-min';
 
 // Placeholder GaugeWidget component
 const GaugeWidget = ({ value, unit, title, min, max }: { value: number, unit: string, title: string, min: number, max: number }) => {
-  // In a real scenario, this would use HTML5 Canvas or a charting library like Plotly.js for gauges
   return (
     <Card className="text-center shadow-md">
       <CardHeader><CardTitle className="text-lg">{title}</CardTitle></CardHeader>
@@ -32,9 +29,8 @@ const generateHistoricalTimeseries = (name: string, days = 7, pointsPerDay = 24,
   const now = new Date();
   for (let day = days - 1; day >= 0; day--) {
     for (let hour = pointsPerDay - 1; hour >= 0; hour--) {
-      // For 1h view, generate minute-by-minute data for the last hour
       let timestamp: Date;
-      if (days === 1 && pointsPerDay === 60) { // Special case for "Last 1 Hour" with 1-min data
+      if (days === 1 && pointsPerDay === 60) {
          timestamp = new Date(now.getTime() - (pointsPerDay - 1 - hour) * 60 * 1000);
       } else {
          timestamp = new Date(now.getTime() - day * 24 * 60 * 60 * 1000 - hour * 60 * 60 * 1000);
@@ -45,59 +41,70 @@ const generateHistoricalTimeseries = (name: string, days = 7, pointsPerDay = 24,
       });
     }
   }
-  return { name, data: data.sort((a,b) => new Date(a.time).getTime() - new Date(b.time).getTime()) };
+  return { name, data: data.sort((a,b) => new Date(a.time).getTime() - new Date(b.time).getTime()), color: getRandomColor() };
+};
+
+const chartColors = [
+  "hsl(var(--chart-1))",
+  "hsl(var(--chart-2))",
+  "hsl(var(--chart-3))",
+  "hsl(var(--chart-4))",
+  "hsl(var(--chart-5))",
+];
+let colorIndex = 0;
+const getRandomColor = () => {
+  const color = chartColors[colorIndex % chartColors.length];
+  colorIndex++;
+  return color;
 };
 
 const SENSOR_TYPES = [
-  { id: 'temperature', name: 'Temperature', unit: '°C', icon: Thermometer, min: 15, max: 30, color: "hsl(var(--chart-1))" },
-  { id: 'occupancy', name: 'Occupancy', unit: '%', icon: Users, min: 0, max: 100, color: "hsl(var(--chart-2))" },
-  { id: 'energy', name: 'Energy Usage', unit: 'kW', icon: Zap, min: 0.1, max: 10, color: "hsl(var(--chart-3))" },
+  { id: 'temperature', name: 'Temperature', unit: '°C', icon: Thermometer, min: 15, max: 30, color: chartColors[0] },
+  { id: 'occupancy', name: 'Occupancy', unit: '%', icon: Users, min: 0, max: 100, color: chartColors[1] },
+  { id: 'energy', name: 'Energy Usage', unit: 'kW', icon: Zap, min: 0.1, max: 10, color: chartColors[2] },
 ];
 
 export default function SensorDataPage() {
   const [selectedSensorId, setSelectedSensorId] = useState<string>(SENSOR_TYPES[0].id);
   const [timeRange, setTimeRange] = useState<string>("7d"); 
-  // TODO: Fetch actual sensor data and stats from backend API based on selectedSensorId and timeRange
+  const [stats, setStats] = useState({ mean: 22.5, min: 18.0, max: 28.5, std: 2.1 });
 
   const selectedSensor = useMemo(() => SENSOR_TYPES.find(s => s.id === selectedSensorId) || SENSOR_TYPES[0], [selectedSensorId]);
 
-  // Mock stats, to be replaced by API data
-  const [stats, setStats] = useState({ mean: 22.5, min: 18.0, max: 28.5, std: 2.1 });
-
-  const chartData: TimeseriesData[] = useMemo(() => {
+  const rawChartData: TimeseriesData[] = useMemo(() => {
     let days = 7;
-    let points = 24; // points per day
-    if (timeRange === "1h") { days = 1; points = 60; } // 60 points for 1 hour (1 per minute)
-    else if (timeRange === "24h") { days = 1; points = 24; } // 24 points for 24 hours (1 per hour)
-    else if (timeRange === "30d") { days = 30; points = 24; } // 24 points per day for 30 days
+    let points = 24;
+    if (timeRange === "1h") { days = 1; points = 60; }
+    else if (timeRange === "24h") { days = 1; points = 24; }
+    else if (timeRange === "30d") { days = 30; points = 24; }
     
-    // This should be replaced by fetched data from an API endpoint like /api/sensor-data?sensorId=...&timeRange=...
-    const rawData = generateHistoricalTimeseries(selectedSensor.id, days, points, selectedSensor.min, selectedSensor.max);
+    const generatedData = generateHistoricalTimeseries(selectedSensor.id, days, points, selectedSensor.min, selectedSensor.max);
+    generatedData.color = selectedSensor.color; // Ensure selected sensor color is used
     
-    // Update mock stats based on generated data for better demo
-    if(rawData.data.length > 0) {
-      const values = rawData.data.map(d => d.value);
+    if(generatedData.data.length > 0) {
+      const values = generatedData.data.map(d => d.value);
       const newMean = values.reduce((a,b) => a+b, 0) / values.length;
       const newMin = Math.min(...values);
       const newMax = Math.max(...values);
       const variance = values.reduce((a,b) => a + Math.pow(b - newMean, 2), 0) / values.length;
       setStats({ mean: newMean, min: newMin, max: newMax, std: Math.sqrt(variance) });
     }
-    return [rawData];
+    return [generatedData];
   }, [selectedSensor, timeRange]);
   
-  const currentRealTimeValue = chartData[0]?.data[chartData[0]?.data.length -1]?.value ?? selectedSensor.min;
+  const currentRealTimeValue = rawChartData[0]?.data[rawChartData[0]?.data.length -1]?.value ?? selectedSensor.min;
 
-  const chartConfig = useMemo(() => ({
-    [selectedSensor.id]: { label: selectedSensor.name, color: selectedSensor.color },
-  } satisfies ChartConfig), [selectedSensor]);
+  const plotlyData: Data[] = useMemo(() => {
+    return rawChartData.map(series => ({
+      x: series.data.map(dp => dp.time),
+      y: series.data.map(dp => dp.value),
+      type: 'scatter', // Default to line chart for sensor trends
+      mode: 'lines+markers',
+      name: selectedSensor.name,
+      marker: { color: series.color }
+    }));
+  }, [rawChartData, selectedSensor.name]);
 
-  const handleExportCSV = () => {
-    // TODO: Implement CSV export. This would call a backend API.
-    // e.g. /api/export-sensor-data?sensorId=...&timeRange=...
-    alert(`CSV Export for ${selectedSensor.name} (${timeRange}) to be implemented.`);
-  };
-  
   const timeRangeLabel = useMemo(() => {
     if (timeRange === "1h") return "Last 1 Hour";
     if (timeRange === "24h") return "Last 24 Hours";
@@ -106,6 +113,21 @@ export default function SensorDataPage() {
     return "Select Range";
   }, [timeRange]);
 
+  const plotlyLayout: Partial<Layout> = useMemo(() => ({
+    title: { text: `${selectedSensor.name} Trend - ${timeRangeLabel}`, font: { color: 'hsl(var(--card-foreground))' } },
+    xaxis: { type: 'date', gridcolor: 'hsl(var(--border))', linecolor: 'hsl(var(--border))', zerolinecolor: 'hsl(var(--border))' },
+    yaxis: { title: { text: `${selectedSensor.name} (${selectedSensor.unit})`, font: { color: 'hsl(var(--card-foreground))' } }, gridcolor: 'hsl(var(--border))', linecolor: 'hsl(var(--border))', zerolinecolor: 'hsl(var(--border))', tickformat: '.1f' },
+    paper_bgcolor: 'hsl(var(--card))',
+    plot_bgcolor: 'hsl(var(--card))',
+    font: { color: 'hsl(var(--card-foreground))' },
+    showlegend: true,
+  }), [selectedSensor, timeRangeLabel]);
+
+
+  const handleExportCSV = () => {
+    alert(`CSV Export for ${selectedSensor.name} (${timeRange}) to be implemented.`);
+  };
+  
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -178,15 +200,22 @@ export default function SensorDataPage() {
           </CardContent>
         </Card>
       </div>
-
-      <SensorChart
-        title={`${selectedSensor.name} Trend - ${timeRangeLabel}`}
-        description={`Historical ${selectedSensor.name.toLowerCase()} data (${selectedSensor.unit}). (Note: Spec prefers Plotly.js for interactivity & zoom)`}
-        data={chartData}
-        config={chartConfig}
-        chartType="line"
-        valueFormatter={(value) => `${value}${selectedSensor.unit}`}
-      />
+      
+      <Card className="shadow-lg">
+        <CardHeader>
+           <CardTitle className="text-xl">{`${selectedSensor.name} Trend - ${timeRangeLabel}`}</CardTitle>
+           <CardDescription>Historical {selectedSensor.name.toLowerCase()} data ({selectedSensor.unit}). Using Plotly.js for interactivity & zoom.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {plotlyData.length > 0 && plotlyData[0].x && plotlyData[0].x.length > 0 ? (
+            <PlotlyChart data={plotlyData} layout={plotlyLayout} />
+          ) : (
+            <div className="h-[300px] flex items-center justify-center bg-muted/30 rounded-md">
+              <p className="text-muted-foreground">No data available for this sensor and time range.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
